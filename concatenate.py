@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import misc
+import pickle
 
 animal_list = list()
 for i in range(12500):
@@ -11,6 +12,12 @@ for i in range(12500):
 animal_list = np.expand_dims(animal_list, axis=0)
 animal_data = np.dstack(animal_list)
 animal_data = np.rollaxis(animal_data, 3, 1)
-print(animal_data.shape)
-f = open('animal_data.npy', 'wb')
-np.save(f, animal_data)
+final_list = list()
+for i in range(0,25000,2):
+ final_list.append([animal_data[i,:,:,:], 1])
+ final_list.append([animal_data[i+1,:,:,:], 0])
+
+f = open('animal_data.pkl', 'wb')
+pickle.dump(final_list, f)
+
+
