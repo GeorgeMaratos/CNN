@@ -6,22 +6,29 @@ import theano.tensor as T
 import lasagne
 import pickle
 
-def load_train():
-
- print("Loading Training Data...")
+def load_data():
+ print("Loading Data...")
  f1 = open('animal_data.pkl', 'rb')
- animal_data = pickle.load(f1)
- x_train = animal_data[:-20000,0]
- y_train = animal_data[:-20000,1]
- x_test = animal_data[-20001:,0]
- y_test = animal_data[:-20001,1]
- return x_train, y_train, x_test, y_test
+ final_list = pickle.load(f1)
+ final_array = np.asarray(final_list)
+ print("Format Data...")
+ new_list = list()
+ for i in range(25000):
+  new_list.append(np.expand_dims(final_array[i,0], axis=0))
+
+ new_array = np.asarray(new_list)
+ x_train = np.vstack(new_array)
+ x_test = x_train[-5001:]
+ y_test = final_array[-5001:]
+ y_train = final_array[:20000]
+ x_train = x_train[:20000]
+ return x_train/np.float32(256), y_train/np.bool_, x_test/np.float32(256), y_test/np.bool_
 
 def build_cnn(input_var=None):
 
  print("Building Network...")
  #input layer
- network = lasagne.layers.InputLayer(shape=(None, 3, 64, 64), input_var=input_var)
+ network = lasagne.layers.InputLayer(shape=(None, 3, 128, 128), input_var=input_var)
 
  #convolution and max pooling layer
  network = lasagne.layers.Conv2DLayer(
@@ -51,7 +58,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 
 def main(num_epochs = 500): 
 
- x_train, y_train, x_test, y_test = load_train()
+ x_train, y_train, x_test, y_test = load_data()
  input_var = T.ftensor4('inputs')
  target_var = T.lvector('targets')
  network = build_cnn(input_var) 
