@@ -4,20 +4,17 @@ import numpy as np
 import theano
 import theano.tensor as T
 import lasagne
+import pickle
 
 def load_train():
 
  print("Loading Training Data...")
- f1 = open('x_train.npy', 'rb')
- f2 = open('y_train.npy', 'rb')
- x_train = np.load(f1)
- y_train = np.load(f2)
- x_train = x_train / np.float32(256)
- y_train = y_train / np.bool_(256)
- x_test = x_train[12000:12500]
- y_test = y_train[12000:12500]
- x_train = x_train[:11999]
- y_train = y_train[:11999]
+ f1 = open('animal_data.pkl', 'rb')
+ animal_data = pickle.load(f1)
+ x_train = animal_data[:-20000,0]
+ y_train = animal_data[:-20000,1]
+ x_test = animal_data[-20001:,0]
+ y_test = animal_data[:-20001,1]
  return x_train, y_train, x_test, y_test
 
 def build_cnn(input_var=None):
