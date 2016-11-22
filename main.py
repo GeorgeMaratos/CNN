@@ -6,9 +6,9 @@ import pickle
 
 def load_data(): #This will return a numpy array of tuples (25000,2) 
  print("Loading Data...")
- f1 = open('animal_list.pkl', 'rb')
- animal_list = pickle.load(f1)
- return animal_list
+ f1 = open('animal_array.npy', 'rb')
+ animal_array = np.load(f1)
+ return animal_array
 
 def build_cnn(input_var=None): #returns a cnn: conv, max pool, two unit output
  print("Building Network...")

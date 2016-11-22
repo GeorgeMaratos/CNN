@@ -13,5 +13,5 @@ for i in range(12500):
 
 
 print("Writing to file...")
-f = open('animal_list.pkl', 'wb')
-pickle.dump(animal_list, f)
+f = open('animal_array.npy', 'wb')
+np.save(f,np.asarray(animal_list))
