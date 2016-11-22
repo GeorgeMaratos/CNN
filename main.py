@@ -6,10 +6,9 @@ import pickle
 
 def load_data(): #This will return a numpy array of tuples (25000,2) 
  print("Loading Data...")
- f1 = open('animal_data.pkl', 'rb')
- final_list = pickle.load(f1)
- final_array = np.asarray(final_list)  
- return final_array
+ f1 = open('animal_list.pkl', 'rb')
+ animal_list = pickle.load(f1)
+ return animal_list
 
 def build_cnn(input_var=None): #returns a cnn: conv, max pool, two unit output
  print("Building Network...")
@@ -45,7 +44,7 @@ def iterate_minibatch(data, batchsize, shuffle=False):
 #MAIN SCRIPT
 data = load_data()
 input_var = T.ftensor4('inputs') #theano variable supposed to be (f,f,f,f)
-target_var = T.lvector('targets') #theano variable supposed to be (f,) it is possible this should be a float
+target_var = T.fvector('targets') #theano variable supposed to be (f,) it is possible this should be a float
 network = build_cnn(input_var)
 print("Setting Theano Parameters...")
  #here are the theano training parameters
@@ -73,5 +72,18 @@ print("Starting Training...")
 for epoch in range(500): #im hard coding epoch number for now
  train_err, train_batches = 0, 0
  for batch in iterate_minibatches(data, 500, shuffle=False):
-  inputs, lables = batch
-  
+  inputs, targets = batch
+  train_err += train_fn(inputs, targets)
+  train_batches += 1
+ print("Epoch {} of {}".format(epoch + 1, 500))
+ print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
+ test_err, test_acc, test_batches = 0, 0, 0
+ for batch in iterate_minibatches(data, 500, shuffle=False):
+  inputs, targets = batch
+  err, acc = val_fn(inputs, targets)
+  test_err += err
+  test_acc += acc
+  test_batches += 1
+ print("Final results:")
+ print("  test loss:\t\t\t{:.6f}".format(test_err / test_batches))
+ print("  test accuracy:\t\t{:.2f} %".format(test_acc / test_batches * 100))

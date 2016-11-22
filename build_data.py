@@ -10,8 +10,7 @@ for i in range(12500):
  animal_list.append([np.rollaxis(np.asarray(im),2,0), np.float32(1)])
  im = misc.imread("dog_scaled.{}.jpg".format(i))
  animal_list.append([np.rollaxis(np.asarray(im),2,0), np.float32(0)])
-inp = np.asarray(animal_list)[:20,0] 
-format_input(inp)
+
 
 print("Writing to file...")
 f = open('animal_list.pkl', 'wb')
