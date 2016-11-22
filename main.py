@@ -11,7 +11,7 @@ def build_cnn(input_var=None): #returns a cnn: conv, max pool, two unit output
  network = lasagne.layers.InputLayer(shape=(None, 3, 128, 128), input_var=input_var)
  #convolution and max pooling layer
  network = lasagne.layers.Conv2DLayer(
-        network, num_filters=32, filter_size=(3,3),
+        network, num_filters=64, filter_size=(5,5),
         nonlinearity=lasagne.nonlinearities.rectify)
  network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
  #2 unit softmax output layer
@@ -33,7 +33,7 @@ def iterate_minibatch(data, batchsize, shuffle=False):
   inputs = np.asarray(data)[start_index: start_index+batchsize, 0]
   targets = np.asarray(data)[start_index: start_index+batchsize, 1]
   form_inputs = format_input(inputs)
-  yield form_inputs.astype('float32'), targets.astype(int)
+  yield form_inputs.astype('float32'), targets.astype(bool)
 
 def load_data(): #This will return a numpy array of tuples (25000,2) 
  print("Loading Data...")
@@ -54,7 +54,7 @@ loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
 loss = loss.mean()
  # Create update expressions for training, (SGD) 
 params = lasagne.layers.get_all_params(network, trainable=True)
-updates = lasagne.updates.sgd(loss, params, learning_rate=0.05) #change learning rate of sgd here
+updates = lasagne.updates.sgd(loss, params, learning_rate=0.001) #change learning rate of sgd here
  # Compile a function performing a training step on a mini-batch
 train_fn = theano.function([input_var, target_var], loss, updates=updates)
  #here are the theano testing parameters
@@ -69,7 +69,7 @@ val_fn = theano.function([input_var, target_var], [test_loss, test_acc])
 
  #now we train the network
 print("Starting Training...")
-for epoch in range(500): #im hard coding epoch number for now
+for epoch in range(50): #im hard coding epoch number for now
  train_err, train_batches = 0, 0
  for batch in iterate_minibatch(data, 200, shuffle=False):
   inputs, targets = batch
@@ -87,3 +87,7 @@ for epoch in range(500): #im hard coding epoch number for now
  print("Final results:")
  print("  test loss:\t\t\t{:.6f}".format(test_err / test_batches))
  print("  test accuracy:\t\t{:.2f} %".format(test_acc / test_batches * 100))
+
+print("Saving Parameters...")
+np.savez('model.npz', *lasagne.layers.get_all_param_values(network))
+
