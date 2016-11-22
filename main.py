@@ -4,11 +4,6 @@ import theano.tensor as T
 import lasagne
 import pickle
 
-def load_data(): #This will return a numpy array of tuples (25000,2) 
- print("Loading Data...")
- f1 = open('animal_array.npy', 'rb')
- animal_array = np.load(f1)
- return animal_array
 
 def build_cnn(input_var=None): #returns a cnn: conv, max pool, two unit output
  print("Building Network...")
@@ -33,15 +28,43 @@ def format_input(inputs):
  new_array = np.vstack(new_list)
  return np.asarray(new_array)
 
+def parse_data(animal_array):
+ print("Parsing Data...")
+ inputs = format_input(np.asarray(data)[:,0]).astype('float32')
+ targets = np.asarray(np.asarray(data)[:,1]).astype('int64')
+ x_train = inputs[:20000]
+ x_test = inputs[-5001:]
+ y_train = targets[:20000]
+ y_test = targets[-5001:]
+ return x_train, y_train, x_test, y_test
+
 def iterate_minibatch(data, batchsize, shuffle=False):
  for start_index in range(0, len(data) - batchsize + 1, batchsize):
   inputs = np.asarray(data)[start_index: start_index+batchsize, 0]
   targets = np.asarray(data)[start_index: start_index+batchsize, 1]
   form_inputs = format_input(inputs)
-  yield form_inputs, targets.astype(int)
+  yield form_inputs.astype('float32'), targets.astype(int)
  
+def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
+    assert len(inputs) == len(targets)
+    if shuffle:
+        indices = np.arange(len(inputs))
+        np.random.shuffle(indices)
+    for start_idx in range(0, len(inputs) - batchsize + 1, batchsize):
+        if shuffle:
+            excerpt = indices[start_idx:start_idx + batchsize]
+        else:
+            excerpt = slice(start_idx, start_idx + batchsize)
+       yield inputs[excerpt], targets[excerpt]
+
+def load_data(): #This will return a numpy array of tuples (25000,2) 
+ print("Loading Data...")
+ f1 = open('animal_array.npy', 'rb')
+ animal_array = np.load(f1)
+ return parse_data(animal_array)
+
 #MAIN SCRIPT
-data = load_data()
+x_train, y_train, x_test, y_test= load_data()
 input_var = T.ftensor4('inputs') #theano variable supposed to be (f,f,f,f)
 target_var = T.lvector('targets') #theano variable supposed to be (f,) it is possible this should be a float
 network = build_cnn(input_var)
@@ -70,14 +93,14 @@ val_fn = theano.function([input_var, target_var], [test_loss, test_acc])
 print("Starting Training...")
 for epoch in range(500): #im hard coding epoch number for now
  train_err, train_batches = 0, 0
- for batch in iterate_minibatch(data, 500, shuffle=False):
+ for batch in iterate_minibatches(x_train, y_train, 500, shuffle=False):
   inputs, targets = batch
   train_err += train_fn(inputs, targets)
   train_batches += 1
  print("Epoch {} of {}".format(epoch + 1, 500))
  print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
  test_err, test_acc, test_batches = 0, 0, 0
- for batch in iterate_minibatch(data, 500, shuffle=False):
+ for batch in iterate_minibatch(x_test, y_test, 500, shuffle=False):
   inputs, targets = batch
   err, acc = val_fn(inputs, targets)
   test_err += err
