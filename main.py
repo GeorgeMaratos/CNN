@@ -38,7 +38,7 @@ def iterate_minibatch(data, batchsize, shuffle=False):
   inputs = np.asarray(data)[start_index: start_index+batchsize, 0]
   targets = np.asarray(data)[start_index: start_index+batchsize, 1]
   form_inputs = format_input(inputs)
-  yield form_inputs, targets
+  yield form_inputs, targets.astype(int)
  
 #MAIN SCRIPT
 data = load_data()
