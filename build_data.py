@@ -7,11 +7,11 @@ print("Preparing the Data...")
 animal_list = list()
 for i in range(12500):
  im = misc.imread("cat_scaled.{}.jpg".format(i))
- animal_list.append([np.rollaxis(np.asarray(im),2,0), np.float32(1)])
+ animal_list.append([np.rollaxis(np.asarray(im),2,0), np.int64(1)])
  im = misc.imread("dog_scaled.{}.jpg".format(i))
- animal_list.append([np.rollaxis(np.asarray(im),2,0), np.float32(0)])
+ animal_list.append([np.rollaxis(np.asarray(im),2,0), np.int64(0)])
 
 
 print("Writing to file...")
 f = open('animal_list.pkl', 'wb')
-pickle.dump(animal_list, f, protocol=2)
+pickle.dump(animal_list, f)

@@ -38,13 +38,12 @@ def iterate_minibatch(data, batchsize, shuffle=False):
   inputs = np.asarray(data)[start_index: start_index+batchsize, 0]
   targets = np.asarray(data)[start_index: start_index+batchsize, 1]
   form_inputs = format_input(inputs)
-  form_targets = format_input(targets)
-  yield form_inputs, form_targets
+  yield form_inputs, targets
  
 #MAIN SCRIPT
 data = load_data()
 input_var = T.ftensor4('inputs') #theano variable supposed to be (f,f,f,f)
-target_var = T.fvector('targets') #theano variable supposed to be (f,) it is possible this should be a float
+target_var = T.lvector('targets') #theano variable supposed to be (f,) it is possible this should be a float
 network = build_cnn(input_var)
 print("Setting Theano Parameters...")
  #here are the theano training parameters
@@ -71,14 +70,14 @@ val_fn = theano.function([input_var, target_var], [test_loss, test_acc])
 print("Starting Training...")
 for epoch in range(500): #im hard coding epoch number for now
  train_err, train_batches = 0, 0
- for batch in iterate_minibatches(data, 500, shuffle=False):
+ for batch in iterate_minibatch(data, 500, shuffle=False):
   inputs, targets = batch
   train_err += train_fn(inputs, targets)
   train_batches += 1
  print("Epoch {} of {}".format(epoch + 1, 500))
  print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
  test_err, test_acc, test_batches = 0, 0, 0
- for batch in iterate_minibatches(data, 500, shuffle=False):
+ for batch in iterate_minibatch(data, 500, shuffle=False):
   inputs, targets = batch
   err, acc = val_fn(inputs, targets)
   test_err += err
