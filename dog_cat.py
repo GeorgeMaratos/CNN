@@ -11,18 +11,7 @@ def load_data():
  f1 = open('animal_data.pkl', 'rb')
  final_list = pickle.load(f1)
  final_array = np.asarray(final_list)
- print("Format Data...")
- new_list = list()
- for i in range(25000):
-  new_list.append(np.expand_dims(final_array[i,0], axis=0))
-
- new_array = np.asarray(new_list)
- x_train = np.vstack(new_array)
- x_test = x_train[-5001:]
- y_test = final_array[-5001:]
- y_train = final_array[:20000]
- x_train = x_train[:20000]
- return x_train/np.float32(256), y_train/np.bool_, x_test/np.float32(256), y_test/np.bool_
+ return final_array
 
 def build_cnn(input_var=None):
 
@@ -120,4 +109,5 @@ def main(num_epochs = 500):
   print("Final results:")
   print("  test loss:\t\t\t{:.6f}".format(test_err / test_batches))
   print("  test accuracy:\t\t{:.2f} %".format(test_acc / test_batches * 100))
+
 main() 
