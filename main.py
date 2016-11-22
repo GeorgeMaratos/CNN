@@ -27,8 +27,20 @@ def build_cnn(input_var=None): #returns a cnn: conv, max pool, two unit output
         nonlinearity=lasagne.nonlinearities.softmax)
  return network
 
-def iterate_minibatches(data, batch_size, shuffle=False):
- #have to return data in array format
+def format_input(inputs):
+ new_list = list()
+ for examples in inputs:
+  new_list.append(np.expand_dims(examples, axis=0))
+ new_array = np.vstack(new_list)
+ return np.asarray(new_array)
+
+def iterate_minibatch(data, batchsize, shuffle=False):
+ for start_index in range(0, len(data) - batchsize + 1, batchsize):
+  inputs = np.asarray(data)[start_index: start_index+batchsize, 0]
+  targets = np.asarray(data)[start_index: start_index+batchsize, 1]
+  form_inputs = format_input(inputs)
+  form_targets = format_input(targets)
+  yield form_inputs, form_targets
  
 #MAIN SCRIPT
 data = load_data()
