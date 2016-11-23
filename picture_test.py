@@ -36,5 +36,5 @@ with np.load('model.npz') as f:
  param_values = [f['arr_%d' % i] for i in range(len(f.files))]
  lasagne.layers.set_all_param_values(network, param_values)
 print("Building Predictor...")
-predict = theano.function([input_layer.input_var], lasagne.layers.get_output(network))
+predict = theano.function([input_layer.input_var], lasagne.layers.get_output(network, deterministic=True))
 print(predict(im_final))
