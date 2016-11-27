@@ -12,14 +12,16 @@ def build_cnn(input_var=None): #returns a cnn: conv, max pool, two unit output
  input_layer = lasagne.layers.InputLayer(shape=(None, 3, 128, 128), input_var=input_var)
  #convolution and max pooling layer
  network = lasagne.layers.Conv2DLayer(
-        input_layer, num_filters=64, filter_size=(5,5),
+        input_layer, num_filters=128, filter_size=(3,3),
+	pad = 1, W=lasagne.init.GlorotUniform('relu'),
         nonlinearity=lasagne.nonlinearities.sigmoid)
- network = lasagne.layers.MaxPool2DLayer(network, pool_size=(3, 3))
- #2 unit softmax output layer
+ print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
+ #output_layer
  network = lasagne.layers.DenseLayer(
 	network,
         num_units=1,
         nonlinearity=lasagne.nonlinearities.sigmoid)
+ print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
  return input_layer, network
 
 input_layer, network = build_cnn()
