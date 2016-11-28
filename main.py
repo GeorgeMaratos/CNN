@@ -10,20 +10,41 @@ import os
 import time
 
 def build_cnn(input_var=None): #returns a cnn: conv, max pool, two unit output
- print("Building Network...")
- #input layer
- network = lasagne.layers.InputLayer(shape=(None, 3, 128, 128), input_var=input_var)
- #convolution and max pooling layer
- network = lasagne.layers.Conv2DLayer(
-        network, num_filters=128, filter_size=(3,3),
-	pad = 1, W=lasagne.init.GlorotUniform('relu'),
-        nonlinearity=lasagne.nonlinearities.sigmoid)
+ network = lasagne.layers.InputLayer(shape=(None, 3, 128, 128),
+            input_var=input_var)
  print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
- #output_layer
+
+ network = lasagne.layers.Conv2DLayer(
+            network, num_filters=16, filter_size=(3, 3),
+            nonlinearity=lasagne.nonlinearities.rectify,
+            W=lasagne.init.GlorotUniform())
+ print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
+ network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+ print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
+
+ network = lasagne.layers.Conv2DLayer(
+            network, num_filters=16, filter_size=(3, 3),
+            nonlinearity=lasagne.nonlinearities.rectify)
+ print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
+ network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+ print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
+
+ network = lasagne.layers.Conv2DLayer(
+            network, num_filters=16, filter_size=(3, 3),
+            nonlinearity=lasagne.nonlinearities.rectify)
+ print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
+ network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+ print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
  network = lasagne.layers.DenseLayer(
-	network,
-        num_units=1,
-        nonlinearity=lasagne.nonlinearities.sigmoid)
+            lasagne.layers.dropout(network, p=.5),
+            num_units=256,
+            nonlinearity=lasagne.nonlinearities.sigmoid)
+ print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
+
+ network = lasagne.layers.DenseLayer(
+            lasagne.layers.dropout(network, p=.5),
+            num_units=1,
+            nonlinearity=lasagne.nonlinearities.sigmoid)
  print("Layer: {}".format(lasagne.layers.get_output_shape(network)))
  return network
 
@@ -36,6 +57,9 @@ def format_input(inputs):
 
 def iterate_minibatch(data, batchsize, shuffle=False):
  for start_index in range(0, len(data) - batchsize + 1, batchsize):
+  if(start_index % 1000 == 0):
+   sys.stdout.write("{}...".format(start_index))
+   sys.stdout.flush()
   inputs = np.asarray(data)[start_index: start_index+batchsize, 0]
   targets = np.asarray(data)[start_index: start_index+batchsize, 1]
   form_inputs = format_input(inputs)
@@ -65,9 +89,12 @@ def format_dataset():
 
 #main script
 data = format_dataset()
+print("Shuffling the Data...")
+np.random.shuffle(data)
 input_var = T.ftensor4('inputs') #theano variable supposed to be (f,f,f,f)
 target_var = T.bmatrix('targets') #theano variable supposed to be
 network = build_cnn(input_var)
+
 print("Setting Theano Parameters...")
  #here are the theano training parameters
  # Create a loss expression for training
@@ -76,7 +103,8 @@ loss = lasagne.objectives.binary_crossentropy(prediction, target_var)
 loss = lasagne.objectives.aggregate(loss, mode='mean')
  # Create update expressions for training, (SGD) 
 params = lasagne.layers.get_all_params(network, trainable=True)
-updates = lasagne.updates.sgd(loss, params, learning_rate=0.01) #change learning rate of sgd here
+#updates = lasagne.updates.sgd(loss, params, learning_rate=0.01) #change learning rate of sgd here
+updates = lasagne.updates.nesterov_momentum(loss, params, learning_rate=0.01, momentum=0.9)
  # Compile a function performing a training step on a mini-batch
 train_fn = theano.function([input_var, target_var], loss, updates=updates)
  #here are the theano testing parameters
@@ -86,17 +114,25 @@ train_fn = theano.function([input_var, target_var], loss, updates=updates)
  # Compile a second function computing the validation loss and accuracy:
 
  #now we train the network
+f = open('log.txt', 'w')
 print("Starting Training...")
 for epoch in range(50): #im hard coding epoch number for now
  train_err, train_batches = 0, 0
  start_time = time.time()
  print("Epoch {}".format(epoch + 1))
- for batch in iterate_minibatch(data, 100, shuffle=False):
+ f.write("Epoch {}\n".format(epoch + 1))
+ for batch in iterate_minibatch(data, 200, shuffle=False):
   inputs, targets = batch
   train_err += train_fn(inputs, targets)
   train_batches += 1
- print("training loss:\t\t{:.6f}".format(train_err / train_batches))
+ print("\ntraining loss:\t\t{:.6f}".format(train_err / train_batches))
+ f.write("\ntraining loss:\t\t{:.6f}\n".format(train_err / train_batches))
  print("Final results in {}s".format(time.time() - start_time))
+ if(epoch > 0):
+  if(epoch % 10 == 0):
+   print("Saving Parameters...")
+   np.savez("model_weightse{}.npz".format(epoch), *lasagne.layers.get_all_param_values(network))
+   
 
 print("Saving Parameters...")
-np.savez('model_weights.npz', *lasagne.layers.get_all_param_values(network))
+np.savez("model_weights.npz", *lasagne.layers.get_all_param_values(network))
